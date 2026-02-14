@@ -23,8 +23,9 @@ aim = None
 
 title_label = Label("Symulacja", (WIDTH + 20, 20), size=40, color=(0, 255, 200))
 
+std_dev = 50
 std_dev_label = Label("Odchylenie standardowe", (WIDTH + 20, 100), size=30, color=(255, 255, 255))
-slider = Slider(screen, WIDTH + 25, 150, 200, 20, min=0, max=100, step=1, initial=50)
+slider = Slider(screen, WIDTH + 25, 150, 200, 20, min=0, max=100, step=1, initial=std_dev)
 output = TextBox(screen, WIDTH + 275, 140, 100, 40, 
                     fontSize=25, 
                     textColor=(0, 0, 0),
@@ -45,7 +46,15 @@ throws = TextBox(screen, WIDTH + 275, 200, 100, 40,
 
 
 def on_button_click():
-    print("Przycisk został kliknięty!")
+    r = np.random.normal(loc=0, scale=std_dev, size=throws_count)
+    phi = np.random.uniform(0, 2 * np.pi, size=throws_count)
+    for i in range(throws_count):
+        x = aim[0] + r[i] * np.cos(phi[i])
+        y = aim[1] + r[i] * np.sin(phi[i])
+        score = evaluate_score((x, y))
+        print(f"Rzut {i+1}: ({x:.2f}, {y:.2f}) - Punkty: {score}")
+        
+
 
 my_button = Button(WIDTH + 25, 250, 100, 30, "Start", action=on_button_click)
 
@@ -64,22 +73,23 @@ while running:
                 if pos[0] <= WIDTH:
                     aim = pos
                     score = evaluate_score(pos)
-                    print(f"Score: {score}")
         
         my_button.handle_event(event)
 
-    # 2. Logika
     mouse_pos = pygame.mouse.get_pos()
     my_button.check_hover(mouse_pos)
     my_button.draw(screen)
-
-
     
     pygame_widgets.update(events)
 
-    output.setText(str(slider.getValue()))
-    throws_count = throws.getText()
+    std_dev = slider.getValue()
+    output.setText(str(std_dev))
     
+    try:
+        throws_count = int(throws.getText())
+    except ValueError:
+        throws_count = 0
+
     title_label.draw(screen)
     std_dev_label.draw(screen)
     throws_label.draw(screen)
