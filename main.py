@@ -19,7 +19,8 @@ pygame.font.init()
 font_size = int(15 * SCALE)
 font = pygame.font.SysFont("Arial", font_size, bold=True)
 
-aim = None
+aim = (WIDTH // 2, HEIGHT // 2)
+simulation_throws = []
 
 title_label = Label("Symulacja", (WIDTH + 20, 20), size=40, color=(0, 255, 200))
 
@@ -44,17 +45,22 @@ throws = TextBox(screen, WIDTH + 275, 200, 100, 40,
                     radius=5
                 )
 
+result_label_title = Label("Wyniki symulacji", (WIDTH + 20, 300), size=30, color=(255, 255, 255))
+result_label = Label("", (WIDTH + 20, 330), size=30, color=(255, 255, 255))
 
 def on_button_click():
+    scores = []
+    simulation_throws.clear()
     r = np.random.normal(loc=0, scale=std_dev, size=throws_count)
     phi = np.random.uniform(0, 2 * np.pi, size=throws_count)
     for i in range(throws_count):
         x = aim[0] + r[i] * np.cos(phi[i])
         y = aim[1] + r[i] * np.sin(phi[i])
-        score = evaluate_score((x, y))
-        print(f"Rzut {i+1}: ({x:.2f}, {y:.2f}) - Punkty: {score}")
-        
-
+        simulation_throws.append((x, y))
+        scores.append(evaluate_score((x, y)))
+    
+    average = sum(scores) / len(scores) if scores else 0
+    result_label.set_text(f"Średnia: {average:.2f}")
 
 my_button = Button(WIDTH + 25, 250, 100, 30, "Start", action=on_button_click)
 
@@ -63,20 +69,20 @@ while running:
     screen.fill((30, 30, 30))
     draw_board(screen, font)
     pygame.draw.line(screen, (255, 255, 255), (WIDTH, 0), (WIDTH, HEIGHT), 2)
+
+    mouse_pos = pygame.mouse.get_pos()
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                pos = pygame.mouse.get_pos()
-                if pos[0] <= WIDTH:
-                    aim = pos
-                    score = evaluate_score(pos)
+                if mouse_pos[0] <= WIDTH:
+                    aim = mouse_pos
+                    score = evaluate_score(mouse_pos)
         
         my_button.handle_event(event)
 
-    mouse_pos = pygame.mouse.get_pos()
     my_button.check_hover(mouse_pos)
     my_button.draw(screen)
     
@@ -93,9 +99,14 @@ while running:
     title_label.draw(screen)
     std_dev_label.draw(screen)
     throws_label.draw(screen)
+    result_label_title.draw(screen)
+    result_label.draw(screen)
 
     if aim:
-        aim_drawing(screen, aim)
+        aim_drawing(screen, aim, std_dev)
+
+    for t in simulation_throws:
+        pygame.draw.circle(screen, (255, 255, 0), (int(t[0]), int(t[1])), 1)
 
     pygame.display.flip()
 
