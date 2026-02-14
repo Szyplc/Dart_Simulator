@@ -1,5 +1,6 @@
 # Konfiguracja ekranu
 WIDTH, HEIGHT = 800, 800
+CONFIG_WIDTH = 400
 SCALE = 2.0
 CENTER = (WIDTH // 2, HEIGHT // 2)
 R_DOUBLE_OUT = 170 * SCALE
